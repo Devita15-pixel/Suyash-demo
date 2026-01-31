@@ -9,6 +9,8 @@ const {
   getRoleStats,
   getRolesDropdown
 } = require('../controllers/roleController');
+const { protect } = require('../middleware/authMiddleware');
+router.use(protect);
 
 // Public routes - no authentication required
 router.get('/', getRoles);
