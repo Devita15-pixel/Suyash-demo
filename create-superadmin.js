@@ -1,14 +1,12 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
-
 dotenv.config();
-
 const createSuperadmin = async () => {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
 
     // Import models
     const Role = require('./models/Role');
@@ -23,9 +21,9 @@ const createSuperadmin = async () => {
         Description: 'Super Administrator with full system access',
         IsActive: true
       });
-      console.log('✅ SuperAdmin role created');
+      console.log('SuperAdmin role created');
     } else {
-      console.log('✅ SuperAdmin role already exists');
+      console.log('SuperAdmin role already exists');
     }
 
     // Step 2: Create Admin Role if not exists
@@ -37,7 +35,7 @@ const createSuperadmin = async () => {
         Description: 'System Administrator',
         IsActive: true
       });
-      console.log('✅ Admin role created');
+      console.log('Admin role created');
     }
 
     // Step 3: Check if superadmin user already exists
@@ -49,7 +47,7 @@ const createSuperadmin = async () => {
     });
     
     if (existingSuperadmin) {
-      console.log('❌ Superadmin user already exists');
+      console.log('Superadmin user already exists');
       console.log('Username: superadmin');
       console.log('Email: superadmin@company.com');
       console.log('You can login with this account');
@@ -66,9 +64,9 @@ const createSuperadmin = async () => {
       // No EmployeeID - this is intentional for superadmin
     });
 
-    console.log('\n🎉 SUPERADMIN CREATED SUCCESSFULLY!');
+    console.log('\nSUPERADMIN CREATED SUCCESSFULLY!');
     console.log('='.repeat(40));
-    console.log('🔑 Login Credentials:');
+    console.log('Login Credentials:');
     console.log('Email: superadmin@company.com');
     console.log('Password: SuperAdmin@123');
     console.log('Username: superadmin');
@@ -79,7 +77,7 @@ const createSuperadmin = async () => {
     process.exit(0);
     
   } catch (error) {
-    console.error('❌ Error creating superadmin:', error.message);
+    console.error('Error creating superadmin:', error.message);
     process.exit(1);
   }
 };
