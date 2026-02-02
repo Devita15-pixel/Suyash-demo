@@ -54,7 +54,6 @@ const rawMaterialSchema = new mongoose.Schema({
 }, {
   timestamps: { createdAt: 'CreatedAt', updatedAt: 'UpdatedAt' }
 });
-
 // Calculate effective rate before saving
 rawMaterialSchema.pre('save', function(next) {
   const totalPercentage = (this.ScrapPercentage + this.TransportLossPercentage) / 100;

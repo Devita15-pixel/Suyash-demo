@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/database');
+const { setupSwagger } = require('./config/swagger'); // CHANGED THIS
 
 // Load env vars
 dotenv.config();
@@ -33,8 +34,15 @@ const app = express();
 // Body parser
 app.use(express.json());
 
-// Enable CORS
-app.use(cors());
+// Enable CORS - Allow all origins for testing on any IP
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Setup Swagger with dynamic configuration
+setupSwagger(app); // CHANGED THIS
 
 // Mount routers - Employee Management System
 app.use('/api/auth', authRoutes);
@@ -63,25 +71,28 @@ app.get('/', (req, res) => {
     success: true,
     message: 'Employee Management & Quotation System API',
     version: '1.0.0',
-    endpoints: {
-      // Employee Management System
-      auth: '/api/auth',
-      employees: '/api/employees',
-      roles: '/api/roles',
-      departments: '/api/departments',
-      designations: '/api/designations',
-      leaveTypes: '/api/leavetypes',
-      company: '/api/company',
-      // Quotation/CRM System
-      costings: '/api/costings',
-      customers: '/api/customers',
-      dimensionWeights: '/api/dimension-weights',
-      items: '/api/items',
-      processes: '/api/processes',
-      quotations: '/api/quotations',
-      rawMaterials: '/api/raw-materials',
-      taxes: '/api/taxes',
-      termsConditions: '/api/terms-conditions'
+    documentation: {
+      swagger: `${req.protocol}://${req.get('host')}/api-docs`,
+      endpoints: {
+        // Employee Management System
+        auth: '/api/auth',
+        employees: '/api/employees',
+        roles: '/api/roles',
+        departments: '/api/departments',
+        designations: '/api/designations',
+        leaveTypes: '/api/leavetypes',
+        company: '/api/company',
+        // Quotation/CRM System
+        costings: '/api/costings',
+        customers: '/api/customers',
+        dimensionWeights: '/api/dimension-weights',
+        items: '/api/items',
+        processes: '/api/processes',
+        quotations: '/api/quotations',
+        rawMaterials: '/api/raw-materials',
+        taxes: '/api/taxes',
+        termsConditions: '/api/terms-conditions'
+      }
     }
   });
 });
@@ -91,7 +102,9 @@ app.get('/health', (req, res) => {
   res.json({
     success: true,
     status: 'OK',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    server_ip: req.ip,
+    client_ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
   });
 });
 
@@ -99,7 +112,8 @@ app.get('/health', (req, res) => {
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route ${req.originalUrl} not found`
+    message: `Route ${req.originalUrl} not found`,
+    documentation: `${req.protocol}://${req.get('host')}/api-docs`
   });
 });
 
@@ -114,33 +128,33 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5009;
+const HOST = process.env.HOST || '0.0.0.0';
 
-const server = app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  const address = server.address();
+  const host = address.address === '::' ? 'localhost' : address.address;
+  const port = address.port;
+  
+  console.log(`✅ Server running`);
   console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 MongoDB URI: ${process.env.MONGODB_URI}`);
-  console.log('\n🔗 Available endpoints:');
-  console.log(`   Home:              http://localhost:${PORT}/`);
-  console.log(`   Health:            http://localhost:${PORT}/health`);
-  console.log('\n👥 Employee Management System:');
-  console.log(`   Auth:              http://localhost:${PORT}/api/auth`);
-  console.log(`   Employees:         http://localhost:${PORT}/api/employees`);
-  console.log(`   Roles:             http://localhost:${PORT}/api/roles`);
-  console.log(`   Departments:       http://localhost:${PORT}/api/departments`);
-  console.log(`   Designations:      http://localhost:${PORT}/api/designations`);
-  console.log(`   Leave Types:       http://localhost:${PORT}/api/leavetypes`);
-  console.log(`   Company:           http://localhost:${PORT}/api/company`);
-  console.log('\n📊 Quotation/CRM System:');
-  console.log(`   Costings:          http://localhost:${PORT}/api/costings`);
-  console.log(`   Customers:         http://localhost:${PORT}/api/customers`);
-  console.log(`   Dimension Weights: http://localhost:${PORT}/api/dimension-weights`);
-  console.log(`   Items:             http://localhost:${PORT}/api/items`);
-  console.log(`   Processes:         http://localhost:${PORT}/api/processes`);
-  console.log(`   Quotations:        http://localhost:${PORT}/api/quotations`);
-  console.log(`   Raw Materials:     http://localhost:${PORT}/api/raw-materials`);
-  console.log(`   Taxes:             http://localhost:${PORT}/api/taxes`);
-  console.log(`   Terms & Conditions: http://localhost:${PORT}/api/terms-conditions`);
+  console.log(`\n🔗 Available on multiple URLs:`);
+  console.log(`   Local:        http://localhost:${port}`);
+  console.log(`   Network:      http://${host}:${port}`);
+  console.log(`   Any IP:       http://0.0.0.0:${port}`);
+  console.log(`\n📚 Swagger Documentation:`);
+  console.log(`   Main Docs:    http://localhost:${port}/api-docs`);
+  console.log(`   Network Docs: http://${host}:${port}/api-docs`);
+  console.log(`\n🩺 Health Check:`);
+  console.log(`   Status:       http://localhost:${port}/health`);
+  console.log(`\n👥 Employee Management System:`);
+  console.log(`   Auth:         http://localhost:${port}/api/auth`);
+  console.log(`   Employees:    http://localhost:${port}/api/employees`);
+  console.log(`\n📊 Quotation/CRM System:`);
+  console.log(`   Quotations:   http://localhost:${port}/api/quotations`);
+  console.log(`   Customers:    http://localhost:${port}/api/customers`);
+  console.log(`   Materials:    http://localhost:${port}/api/materials`);
 });
 
 // Handle unhandled promise rejections

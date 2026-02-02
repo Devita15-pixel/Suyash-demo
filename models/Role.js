@@ -6,24 +6,16 @@ const roleSchema = new mongoose.Schema({
     required: [true, 'Role name is required'],
     unique: true,
     trim: true,
-    minlength: 2,
-    maxlength: 50
+    maxlength: 100
   },
   Description: {
     type: String,
-    trim: true
+    trim: true,
+    maxlength: 500
   },
   IsActive: {
     type: Boolean,
     default: true
-  },
-  CreatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  UpdatedAt: {
-    type: Date,
-    default: Date.now
   },
   CreatedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -37,10 +29,11 @@ const roleSchema = new mongoose.Schema({
   timestamps: { createdAt: 'CreatedAt', updatedAt: 'UpdatedAt' }
 });
 
-// Pre-save middleware to update UpdatedAt
-roleSchema.pre('save', function(next) {
-  this.UpdatedAt = Date.now();
-  next();
-});
+// Add indexes
+roleSchema.index({ RoleName: 1 });
+roleSchema.index({ IsActive: 1 });
+roleSchema.index({ CreatedAt: -1 });
 
-module.exports = mongoose.model('Role', roleSchema);
+const Role = mongoose.model('Role', roleSchema);
+
+module.exports = Role;
